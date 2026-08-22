@@ -1,0 +1,33 @@
+name: GAO Mining Cron
+
+on:
+  schedule:
+    - cron: "0 */4 * * *"
+  workflow_dispatch:
+
+concurrency:
+  group: gunart-mining
+  cancel-in-progress: false
+
+jobs:
+  mining:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Run mining task
+        env:
+          GAO_USERNAME: ${{ secrets.GAO_USERNAME }}
+          GAO_PASSWORD: ${{ secrets.GAO_PASSWORD }}
+          GAO_MINE_ZONE: ${{ vars.GAO_MINE_ZONE }}
+          GAO_SAFE_THRESHOLD: ${{ vars.GAO_SAFE_THRESHOLD }}
+          GAO_MAX_FOOD_USES: ${{ vars.GAO_MAX_FOOD_USES }}
+          GAO_FOOD_NAME: ${{ vars.GAO_FOOD_NAME }}
+        run: python main.py
