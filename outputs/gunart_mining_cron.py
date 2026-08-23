@@ -24,6 +24,7 @@ from typing import Any
 
 BASE_URL = "https://gunart-backend.onrender.com"
 DEFAULT_MINE_ZONE = "iron_mine"
+TOWN_ZONE = "starting_town"
 MIN_COLLECT_SECONDS = 15 * 60
 
 
@@ -141,6 +142,9 @@ class GunArtClient:
     def mine_start(self, zone: str) -> dict[str, Any]:
         return self.request("POST", "/api/town/mine/start", {"zone": zone})
 
+    def tower_status(self) -> dict[str, Any]:
+        return self.request("GET", "/api/tower/status")
+
 
 def summarize_result(result: dict[str, Any]) -> str:
     parts: list[str] = []
@@ -156,6 +160,11 @@ def summarize_result(result: dict[str, Any]) -> str:
 def character_from(payload: dict[str, Any]) -> dict[str, Any]:
     value = payload.get("character") or payload.get("player") or {}
     return value if isinstance(value, dict) else {}
+
+
+def tower_zone(payload: dict[str, Any]) -> str | None:
+    zone = payload.get("zone")
+    return str(zone) if zone else None
 
 
 def food_effect(food: dict[str, Any]) -> tuple[float, float]:
@@ -275,6 +284,12 @@ def run_once() -> int:
         preferred_food_name=food_name,
         max_uses=max_food_uses,
     )
+
+    tower = client.tower_status()
+    current_zone = tower_zone(tower)
+    if current_zone != TOWN_ZONE:
+        log(f"not in town (zone={current_zone}); skip starting mine")
+        return 0
 
     started = client.mine_start(mine_zone)
     log(f"start mine {mine_zone}: {summarize_result(started)}")
