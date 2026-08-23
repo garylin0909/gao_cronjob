@@ -13,7 +13,6 @@ Designed for GitHub Actions or any scheduled runner:
 from __future__ import annotations
 
 import json
-import math
 import os
 import sys
 import urllib.error
@@ -24,6 +23,8 @@ from typing import Any
 
 BASE_URL = "https://gunart-backend.onrender.com"
 DEFAULT_MINE_ZONE = "iron_mine"
+DEFAULT_FOOD_NAME = "牛鞭"
+DEFAULT_FOOD_USES = 2
 TOWN_ZONE = "starting_town"
 MIN_COLLECT_SECONDS = 15 * 60
 
@@ -206,7 +207,7 @@ def eat_until_safe(
         max_mp = float(character.get("maxMp") or 0)
         hp_need = max(0.0, threshold * max_hp - current_hp)
         mp_need = max(0.0, threshold * max_mp - current_mp)
-        if hp_need <= 0 and mp_need <= 0:
+        if not preferred_food_name and hp_need <= 0 and mp_need <= 0:
             break
 
         candidates = []
@@ -214,7 +215,7 @@ def eat_until_safe(
             if int(food.get("quantity") or 0) <= 0:
                 continue
             restore_hp, restore_mp = food_effect(food)
-            useful = min(restore_hp, hp_need) + min(restore_mp, mp_need)
+            useful = restore_hp + restore_mp if preferred_food_name else min(restore_hp, hp_need) + min(restore_mp, mp_need)
             if useful <= 0:
                 continue
             waste = max(0.0, restore_hp - hp_need) + max(0.0, restore_mp - mp_need)
@@ -251,9 +252,9 @@ def run_once() -> int:
     username = os.getenv("GAO_USERNAME")
     password = os.getenv("GAO_PASSWORD")
     mine_zone = os.getenv("GAO_MINE_ZONE") or DEFAULT_MINE_ZONE
-    food_name = os.getenv("GAO_FOOD_NAME") or "牛肉"
+    food_name = os.getenv("GAO_FOOD_NAME") or DEFAULT_FOOD_NAME
     threshold = float(os.getenv("GAO_SAFE_THRESHOLD") or "0.70")
-    max_food_uses = int(os.getenv("GAO_MAX_FOOD_USES") or "10")
+    max_food_uses = int(os.getenv("GAO_MAX_FOOD_USES") or str(DEFAULT_FOOD_USES))
 
     if not token and (not username or not password):
         print("Set GAO_TOKEN or GAO_USERNAME/GAO_PASSWORD in GitHub Secrets.", file=sys.stderr)
