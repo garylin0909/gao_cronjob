@@ -4,7 +4,7 @@ GitHub Actions scheduled task for Gun Art Online mining.
 
 ## Schedule
 
-Runs once every 4 hours and can also be started manually from the Actions tab.
+Runs once every 6 hours and can also be started manually from the Actions tab.
 
 ## Required secrets
 
